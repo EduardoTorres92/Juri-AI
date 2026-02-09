@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% load static %}
+{% block 'body' %}
+<main class="min-h-screen bg-slate-50 dark:bg-slate-900">
+  <header class="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between gap-x-8">
+        <div class="flex items-center gap-x-6">
+          <a href="{% url 'area_detail' area.id %}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            Voltar
+          </a>
+          <h1 class="text-xl font-semibold text-slate-900 dark:text-white">Chat - Área de Atuação</h1>
+          <span class="text-sm text-slate-500 dark:text-slate-400">{{ area.nome }}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="text-sm text-slate-500 dark:text-slate-400">Online</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <div class="flex flex-col lg:flex-row gap-6">
+      <div class="flex-1 min-w-0 max-w-4xl">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div class="flex flex-col gap-6 p-6 min-h-[400px] max-h-[calc(100vh-280px)] overflow-y-auto" id="chat">
+            <div class="flex items-start gap-2.5">
+              <img class="w-10 h-10 rounded-full shrink-0" src="{% static 'assistente_virtual.png' %}" alt="JuriAI">
+              <div class="flex flex-col gap-1 w-full max-w-[320px]">
+                <span class="text-sm font-semibold text-slate-900 dark:text-white">Assistente da Área - {{ area.nome }}</span>
+                <div class="p-4 rounded-e-xl rounded-es-xl bg-slate-100 dark:bg-slate-700/50 text-slate-900 dark:text-slate-100">
+                  <p class="text-sm">Olá! Respondo apenas com base nos documentos desta área. Sempre indico a fonte. Como posso ajudar?</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="p-4 border-t border-slate-200 dark:border-slate-700">
+            <form id="form-pergunta">{% csrf_token %}
+              <div class="flex items-end gap-3">
+                <div class="flex-1">
+                  <textarea name="pergunta" id="pergunta" rows="2" placeholder="Faça sua pergunta sobre os documentos da área..."
+                    class="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-violet-500 outline-none resize-none"></textarea>
+                  <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Respostas baseadas apenas nos documentos anexados à área.</p>
+                </div>
+                <button type="submit" class="shrink-0 rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-500">Enviar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <aside class="lg:w-80 shrink-0 space-y-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 sticky top-4">
+          <h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-4">Sugestões</h3>
+          <div class="space-y-3">
+            <button type="button" class="sugestao-btn w-full text-left p-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 hover:bg-violet-50 dark:hover:bg-violet-900/20 text-sm text-slate-700 dark:text-slate-300 transition-colors" data-pergunta="Qual o artigo que trata desse tema?">Qual o artigo que trata desse tema?</button>
+            <button type="button" class="sugestao-btn w-full text-left p-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 hover:bg-violet-50 dark:hover:bg-violet-900/20 text-sm text-slate-700 dark:text-slate-300 transition-colors" data-pergunta="Resuma os principais pontos do documento.">Resuma os principais pontos do documento.</button>
+            <button type="button" class="sugestao-btn w-full text-left p-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 hover:bg-violet-50 dark:hover:bg-violet-900/20 text-sm text-slate-700 dark:text-slate-300 transition-colors" data-pergunta="Cite o trecho que fundamenta essa resposta.">Cite o trecho que fundamenta essa resposta.</button>
+          </div>
+
+          <h3 class="text-sm font-semibold text-slate-900 dark:text-white mt-6 mb-4">Histórico de conversas</h3>
+          <div class="space-y-2 max-h-64 overflow-y-auto" id="historico-container">
+            {% for p in historico %}
+            <div class="historico-item p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-600 transition-colors group" data-pergunta="{{ p.pergunta }}">
+              <div class="flex items-start gap-2">
+                <span class="text-slate-400 dark:text-slate-500 shrink-0 mt-0.5">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </span>
+                <div class="min-w-0 flex-1">
+                  <p class="text-xs font-medium text-slate-700 dark:text-slate-300 line-clamp-2 group-hover:text-violet-600 dark:group-hover:text-violet-400">{{ p.pergunta|truncatewords:12 }}</p>
+                  {% if p.resposta %}
+                  <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">{{ p.resposta|truncatewords:18 }}</p>
+                  {% endif %}
+                  <div class="flex gap-2 mt-2 flex-wrap" onclick="event.stopPropagation()">
+                    <a href="{% url 'ver_conversa_area' p.id %}" target="_blank" class="text-xs text-violet-600 dark:text-violet-400 hover:underline inline-flex items-center gap-1">Abrir</a>
+                    <a href="{% url 'ver_referencias_area' p.id %}" class="text-xs text-slate-500 dark:text-slate-400 hover:underline">Fontes</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <p class="text-xs text-slate-500 dark:text-slate-400 py-2">Nenhuma conversa ainda.</p>
+            {% endfor %}
+          </div>
+
+          <div class="mt-6 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50">
+            <p class="text-xs font-medium text-emerald-800 dark:text-emerald-200 mb-1">Baseado nos seus documentos</p>
+            <p class="text-xs text-emerald-700 dark:text-emerald-300">Todas as respostas são extraídas dos documentos que você anexou à área.</p>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</main>
+<script>
+  const formEl = document.getElementById('form-pergunta');
+  const perguntaEl = document.getElementById('pergunta');
+  const chatUrl = "{% url 'chat_area' area.id %}";
+  const streamUrl = "{% url 'stream_resposta_area' %}";
+  const staticUrl = "{% static 'assistente_virtual.png' %}";
+  document.querySelectorAll('.sugestao-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const texto = this.dataset.pergunta || this.textContent.trim();
+      if (texto) { perguntaEl.value = texto; formEl.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true })); }
+    });
+  });
+  document.querySelectorAll('.historico-item').forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      if (e.target.closest('a')) return;
+      const texto = this.dataset.pergunta || '';
+      if (texto) { perguntaEl.value = texto; perguntaEl.focus(); }
+    });
+  });
+  async function enviarPergunta() {
+    const pergunta = perguntaEl.value.trim();
+    if (!pergunta) return;
+    perguntaEl.value = '';
+    const formData = new FormData();
+    formData.append('pergunta', pergunta);
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    const response = await fetch(chatUrl, { method: "POST", body: formData });
+    const data = await response.json();
+    const perguntaId = data.id;
+    const agora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const novaMensagem1 = document.createElement("div");
+    novaMensagem1.className = "flex items-start gap-2.5 justify-end";
+    novaMensagem1.innerHTML = '<div class="flex flex-col gap-1 w-full max-w-[320px] text-right"><div class="flex items-center justify-end gap-2"><span class="text-xs text-slate-500">'+agora+'</span><span class="text-sm font-semibold text-slate-900 dark:text-white">Você</span></div><div class="p-4 rounded-s-xl rounded-ee-xl bg-violet-100 dark:bg-violet-900/30 text-slate-900 dark:text-slate-100"><p class="text-sm whitespace-pre-wrap"></p></div></div>';
+    novaMensagem1.querySelector('p').textContent = pergunta;
+    document.getElementById("chat").appendChild(novaMensagem1);
+    const novaMensagem = document.createElement("div");
+    novaMensagem.className = "flex items-start gap-2.5";
+    novaMensagem.innerHTML = '<img class="w-10 h-10 rounded-full shrink-0" src="'+staticUrl+'" alt="JuriAI"><div class="flex flex-col gap-1 w-full max-w-[320px]"><span class="text-sm font-semibold text-slate-900 dark:text-white">Assistente da Área</span><div class="p-4 rounded-e-xl rounded-es-xl bg-slate-100 dark:bg-slate-700/50"><p id="resposta-'+perguntaId+'" class="text-sm text-slate-900 dark:text-slate-100"></p></div><a href="/ia/ver_referencias_area/'+perguntaId+'/" class="text-sm text-violet-600 dark:text-violet-400 hover:underline">Confira as fontes</a></div>';
+    document.getElementById("chat").appendChild(novaMensagem);
+    document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
+    const streamResponse = await fetch(streamUrl, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ id_pergunta: perguntaId }) });
+    const reader = streamResponse.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    const respostaElemento = document.getElementById('resposta-'+perguntaId);
+    let respostaCompleta = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      respostaCompleta += chunk;
+      respostaElemento.innerText += chunk;
+      document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
+    }
+    const saveForm = new FormData();
+    saveForm.append('pergunta_id', perguntaId);
+    saveForm.append('resposta', respostaCompleta);
+    saveForm.append('tipo', 'area');
+    saveForm.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    fetch("{% url 'salvar_resposta' %}", { method: 'POST', body: saveForm, credentials: 'same-origin' }).catch(() => {});
+    const histContainer = document.getElementById('historico-container');
+    if (histContainer) {
+      const emptyMsg = histContainer.querySelector('.text-slate-500');
+      if (emptyMsg) emptyMsg.remove();
+      const respostaText = respostaCompleta || (respostaElemento ? respostaElemento.innerText : '');
+      const txtPerg = pergunta.length > 60 ? pergunta.substring(0, 60) + '...' : pergunta;
+      const txtResp = respostaText.length > 80 ? respostaText.substring(0, 80) + '...' : respostaText;
+      const novoItem = document.createElement('div');
+      novoItem.className = 'historico-item p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-600 transition-colors group';
+      novoItem.dataset.pergunta = pergunta;
+      novoItem.innerHTML = '<div class="flex items-start gap-2"><span class="text-slate-400 dark:text-slate-500 shrink-0 mt-0.5"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span><div class="min-w-0 flex-1"><p class="text-xs font-medium text-slate-700 dark:text-slate-300 line-clamp-2"></p><p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1"></p><div class="flex gap-2 mt-2 flex-wrap" onclick="event.stopPropagation()"><a href="/ia/ver_conversa_area/' + perguntaId + '/" target="_blank" class="text-xs text-violet-600 dark:text-violet-400 hover:underline inline-flex items-center gap-1">Abrir</a><a href="/ia/ver_referencias_area/' + perguntaId + '/" class="text-xs text-slate-500 dark:text-slate-400 hover:underline">Fontes</a></div></div></div>';
+      novoItem.querySelectorAll('p')[0].textContent = txtPerg;
+      novoItem.querySelectorAll('p')[1].textContent = txtResp;
+      novoItem.addEventListener('click', function(e) { if (e.target.closest('a')) return; perguntaEl.value = this.dataset.pergunta; perguntaEl.focus(); });
+      histContainer.insertBefore(novoItem, histContainer.firstChild);
+    }
+  }
+  formEl.addEventListener('submit', async function(event) { event.preventDefault(); await enviarPergunta(); });
+</script>
+{% endblock 'body' %}

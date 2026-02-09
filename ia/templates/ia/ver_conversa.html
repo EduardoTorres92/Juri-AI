@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load static %}
+{% block 'body' %}
+<div class="min-h-screen bg-slate-50 dark:bg-slate-900 p-6">
+  <div class="mx-auto max-w-3xl">
+    <a href="{% url voltar_url voltar_id %}" class="text-sm text-violet-600 dark:text-violet-400 hover:underline mb-6 inline-block">← Voltar</a>
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+      <div class="p-6 space-y-6">
+        <div>
+          <h3 class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-2">Pergunta</h3>
+          <p class="text-slate-900 dark:text-white whitespace-pre-wrap">{{ pergunta.pergunta }}</p>
+        </div>
+        <div class="border-t border-slate-200 dark:border-slate-700 pt-6">
+          <h3 class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-2">Resposta</h3>
+          {% if pergunta.resposta %}
+          <div class="text-slate-800 dark:text-slate-200 whitespace-pre-wrap prose prose-slate dark:prose-invert max-w-none">{{ pergunta.resposta }}</div>
+          {% else %}
+          <p class="text-slate-500 dark:text-slate-400 italic">Resposta ainda não disponível.</p>
+          {% endif %}
+        </div>
+        <div class="flex gap-2 pt-4">
+          <a href="{% url ver_referencias_url pergunta.id %}" class="inline-flex items-center gap-2 rounded-lg bg-violet-100 dark:bg-violet-900/30 px-4 py-2 text-sm font-medium text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-900/50">
+            Ver fontes
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock 'body' %}

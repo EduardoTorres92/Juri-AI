@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% block 'head' %}
+<style>
+#modal-nova-area { display: none; }
+#modal-nova-area.show { display: flex !important; }
+</style>
+{% endblock 'head' %}
+{% block 'body' %}
+<div class="flex min-h-screen flex-col gap-6 p-6 sm:p-8 lg:p-10">
+  <div class="flex flex-shrink-0 justify-between items-center">
+    <div>
+      <h1 class="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">Áreas de Atuação</h1>
+      <p class="text-slate-500 dark:text-slate-400 mt-1">Gerencie áreas de atuação (ex: Processo Penal, Direito Civil) e documentos relevantes para consulta via IA.</p>
+      <a href="{% url 'dashboard' %}" class="text-sm text-slate-500 dark:text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 mt-1 inline-block">← Voltar ao painel</a>
+    </div>
+    <button onclick="abrirModal()" class="bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm">
+      Nova área
+    </button>
+  </div>
+
+  <div class="rounded-xl bg-white dark:bg-slate-800 p-4 ring-1 ring-slate-200 dark:ring-slate-700/50">
+    <p class="text-xs text-slate-500 dark:text-slate-400">TOTAL</p>
+    <p class="text-2xl font-semibold text-slate-900 dark:text-white mt-1">{{ total|default:0 }}</p>
+  </div>
+
+  {% if messages %}
+  <div class="flex-shrink-0">
+    {% for message in messages %}
+    <div class="rounded-xl p-4 {% if 'green' in message.tags %}bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800{% elif 'red' in message.tags %}bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800{% else %}bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700{% endif %}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="flex flex-1 flex-col overflow-hidden rounded-2xl bg-white dark:bg-slate-800 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700/50">
+    <form method="GET" class="flex flex-shrink-0 flex-col md:flex-row gap-4 p-6 border-b border-slate-200 dark:border-slate-700">
+      <div class="flex-1 relative">
+        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+        </span>
+        <input type="text" name="q" value="{{ busca }}" placeholder="Buscar por nome ou descrição..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none text-sm" />
+      </div>
+      <button type="submit" class="rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2.5 text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Filtrar</button>
+    </form>
+
+    <div class="min-h-0 flex-1 overflow-auto">
+      <table class="w-full text-sm">
+        <thead class="sticky top-0 bg-slate-50 dark:bg-slate-800/95 border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400">
+          <tr>
+            <th class="text-left py-4 px-6 font-medium">Área</th>
+            <th class="text-left py-4 px-6 font-medium">Descrição</th>
+            <th class="text-left py-4 px-6 font-medium">Último documento</th>
+            <th class="w-12 py-4 px-4"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+          {% for item in areas_com_ultimo %}
+          {% with area=item.area %}
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+            <td class="py-4 px-6">
+              <a href="{% url 'area_detail' area.id %}" class="flex items-center gap-3 group">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-600/80 text-sm font-semibold text-white">
+                  {{ area.nome|slice:":1"|upper }}
+                </div>
+                <div>
+                  <p class="font-medium text-slate-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400">{{ area.nome }}</p>
+                </div>
+              </a>
+            </td>
+            <td class="py-4 px-6 text-slate-600 dark:text-slate-300">{{ area.descricao|truncatewords:15|default:"—" }}</td>
+            <td class="py-4 px-6">
+              {% if item.ultimo_desc %}
+              <p class="text-slate-600 dark:text-slate-300">{{ item.ultimo_desc }}</p>
+              {% if item.ultimo_data %}<p class="text-xs text-slate-500 dark:text-slate-400">Atualizado em {{ item.ultimo_data|date:"d/m" }}</p>{% endif %}
+              {% else %}
+              <span class="text-slate-400 dark:text-slate-500">—</span>
+              {% endif %}
+            </td>
+            <td class="py-4 px-4">
+              <a href="{% url 'area_editar' area.id %}" class="inline-flex p-2 text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 rounded-lg transition-colors" title="Editar">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+              </a>
+            </td>
+          </tr>
+          {% endwith %}
+          {% empty %}
+          <tr>
+            <td colspan="4" class="py-12 text-center text-slate-500 dark:text-slate-400">Nenhuma área encontrada. Crie uma área para começar.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page.has_other_pages %}
+    <div class="flex flex-shrink-0 items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-700">
+      <p class="text-sm text-slate-500 dark:text-slate-400">Mostrando {{ page.start_index }}-{{ page.end_index }} de {{ paginator.count }} áreas</p>
+      <div class="flex items-center gap-1">
+        {% if page.has_previous %}
+        <a href="?page={{ page.previous_page_number }}{% if busca %}&q={{ busca }}{% endif %}" class="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+          Anterior
+        </a>
+        {% endif %}
+        {% for p in page.paginator.page_range %}
+          {% if p == page.number %}
+        <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-violet-600 text-white text-sm font-medium">{{ p }}</span>
+          {% elif p > page.number|add:"-3" and p < page.number|add:"3" %}
+        <a href="?page={{ p }}{% if busca %}&q={{ busca }}{% endif %}" class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">{{ p }}</a>
+          {% endif %}
+        {% endfor %}
+        {% if page.has_next %}
+        <a href="?page={{ page.next_page_number }}{% if busca %}&q={{ busca }}{% endif %}" class="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+          Próximo
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modal Nova Área -->
+<div id="modal-nova-area" class="fixed inset-0 z-[9999] flex items-center justify-center p-4" style="display: none">
+  <div onclick="fecharModal()" class="absolute inset-0 bg-slate-900/50 dark:bg-slate-950/70 backdrop-blur-sm"></div>
+  <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto z-10 ring-1 ring-slate-200 dark:ring-slate-700">
+    <div class="px-6 pt-6 pb-6">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Nova área de atuação</h3>
+        <button onclick="fecharModal()" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <form action="{% url 'areas_list' %}" method="POST" class="space-y-4">
+        {% csrf_token %}
+        <div>
+          <label for="nome" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nome</label>
+          <input type="text" name="nome" id="nome" required placeholder="Ex: Processo Penal, Direito Civil"
+            class="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-violet-500 outline-none" />
+        </div>
+        <div>
+          <label for="descricao" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Descrição (opcional)</label>
+          <textarea name="descricao" id="descricao" rows="3" placeholder="Breve descrição da área..."
+            class="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-violet-500 outline-none"></textarea>
+        </div>
+        <div class="flex gap-3 pt-4">
+          <button type="button" onclick="fecharModal()" class="flex-1 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Cancelar</button>
+          <button type="submit" class="flex-1 bg-violet-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-violet-500 transition-colors">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function abrirModal() { document.getElementById('modal-nova-area').style.display = 'flex'; }
+function fecharModal() { document.getElementById('modal-nova-area').style.display = 'none'; }
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') fecharModal(); });
+</script>
+{% endblock 'body' %}

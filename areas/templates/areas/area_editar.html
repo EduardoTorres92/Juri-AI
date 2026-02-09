@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block 'body' %}
+<div class="flex min-h-screen flex-col gap-6 p-6 sm:p-8 lg:p-10">
+  <div class="flex flex-shrink-0 justify-between items-center">
+    <div>
+      <h1 class="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">Editar área</h1>
+      <p class="text-slate-500 dark:text-slate-400 mt-1">{{ area.nome }}</p>
+    </div>
+    <a href="{% url 'area_detail' area.id %}" class="rounded-xl border border-slate-200 dark:border-slate-600 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+      Voltar
+    </a>
+  </div>
+
+  {% if messages %}
+  <div class="flex-shrink-0">
+    {% for message in messages %}
+    <div class="rounded-xl p-4 {% if 'green' in message.tags %}bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800{% elif 'red' in message.tags %}bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800{% else %}bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700{% endif %}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="flex-1 rounded-2xl bg-white dark:bg-slate-800 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700/50 p-6 max-w-2xl">
+    <form action="{% url 'area_editar' area.id %}" method="POST" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label for="nome" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome</label>
+        <input type="text" name="nome" id="nome" value="{{ area.nome }}" required placeholder="Ex: Processo Penal"
+          class="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-violet-500 outline-none">
+      </div>
+      <div>
+        <label for="descricao" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descrição (opcional)</label>
+        <textarea name="descricao" id="descricao" rows="4" placeholder="Breve descrição da área..."
+          class="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-violet-500 outline-none">{{ area.descricao }}</textarea>
+      </div>
+      <div class="flex gap-3 pt-4">
+        <a href="{% url 'area_detail' area.id %}" class="flex-1 text-center border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+          Cancelar
+        </a>
+        <button type="submit" class="flex-1 bg-violet-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-violet-500 transition-colors">
+          Salvar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock 'body' %}

@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% block 'head' %}
+<style>
+#modal-novo-cliente { display: none; }
+#modal-novo-cliente.show { display: flex !important; }
+</style>
+{% endblock 'head' %}
+{% block 'body' %}
+<div class="flex min-h-screen flex-col gap-6 p-6 sm:p-8 lg:p-10">
+  <div class="flex flex-shrink-0 justify-between items-center">
+    <div>
+      <h1 class="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">Clientes</h1>
+      <p class="text-slate-500 dark:text-slate-400 mt-1">Gerencie cadastros de clientes, dados de contato e informações jurídicas relevantes.</p>
+    </div>
+    <button onclick="abrirModal()" class="bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm">
+      Novo cliente
+    </button>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="rounded-xl bg-white dark:bg-slate-800 p-4 ring-1 ring-slate-200 dark:ring-slate-700/50">
+      <p class="text-xs text-slate-500 dark:text-slate-400">TOTAL</p>
+      <p class="text-2xl font-semibold text-slate-900 dark:text-white mt-1">{{ total|default:0 }}</p>
+    </div>
+    <div class="rounded-xl bg-white dark:bg-slate-800 p-4 ring-1 ring-slate-200 dark:ring-slate-700/50">
+      <p class="text-xs text-slate-500 dark:text-slate-400">ATIVOS</p>
+      <p class="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">{{ ativos|default:0 }}</p>
+    </div>
+    <div class="rounded-xl bg-white dark:bg-slate-800 p-4 ring-1 ring-slate-200 dark:ring-slate-700/50">
+      <p class="text-xs text-slate-500 dark:text-slate-400">VIP</p>
+      <p class="text-2xl font-semibold text-violet-600 dark:text-violet-400 mt-1">{{ vip_count|default:0 }}</p>
+    </div>
+    <div class="rounded-xl bg-white dark:bg-slate-800 p-4 ring-1 ring-slate-200 dark:ring-slate-700/50">
+      <p class="text-xs text-slate-500 dark:text-slate-400">INATIVOS</p>
+      <p class="text-2xl font-semibold text-slate-600 dark:text-slate-400 mt-1">{{ inativos|default:0 }}</p>
+    </div>
+  </div>
+
+  {% if messages %}
+  <div class="flex-shrink-0">
+    {% for message in messages %}
+    <div class="rounded-xl p-4 {% if 'green' in message.tags %}bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800{% elif 'red' in message.tags %}bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800{% else %}bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700{% endif %}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="flex flex-1 flex-col overflow-hidden rounded-2xl bg-white dark:bg-slate-800 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700/50">
+    <form method="GET" class="flex flex-shrink-0 flex-col md:flex-row gap-4 p-6 border-b border-slate-200 dark:border-slate-700">
+      <div class="flex-1 relative">
+        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+        </span>
+        <input type="text" name="q" value="{{ busca }}" placeholder="Buscar por nome, CPF/CNPJ ou e-mail..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none text-sm" />
+      </div>
+      <div class="flex gap-3 flex-wrap">
+        <select name="status" class="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-violet-500 outline-none">
+          <option value="" {% if not status_filtro %}selected{% endif %}>Todos os status</option>
+          <option value="ativo" {% if status_filtro == 'ativo' %}selected{% endif %}>Ativo</option>
+          <option value="vip" {% if status_filtro == 'vip' %}selected{% endif %}>VIP</option>
+          <option value="inativo" {% if status_filtro == 'inativo' %}selected{% endif %}>Inativo</option>
+        </select>
+        <select name="tipo" class="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-violet-500 outline-none">
+          <option value="" {% if not tipo_filtro %}selected{% endif %}>Tipo</option>
+          <option value="PF" {% if tipo_filtro == 'PF' %}selected{% endif %}>Pessoa física</option>
+          <option value="PJ" {% if tipo_filtro == 'PJ' %}selected{% endif %}>Pessoa jurídica</option>
+        </select>
+        <button type="submit" class="rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2.5 text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Filtrar</button>
+      </div>
+    </form>
+
+    <div class="min-h-0 flex-1 overflow-auto">
+      <table class="w-full text-sm">
+        <thead class="sticky top-0 bg-slate-50 dark:bg-slate-800/95 border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400">
+          <tr>
+            <th class="text-left py-4 px-6 font-medium">Cliente</th>
+            <th class="text-left py-4 px-6 font-medium">Tipo</th>
+            <th class="text-left py-4 px-6 font-medium">Contato</th>
+            <th class="text-left py-4 px-6 font-medium">Caso / Documentos</th>
+            <th class="text-left py-4 px-6 font-medium">Status</th>
+            <th class="w-12 py-4 px-4"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+          {% for item in clientes_com_ultimo %}
+          {% with cliente=item.cliente %}
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+            <td class="py-4 px-6">
+              <a href="{% url 'cliente' cliente.id %}" class="flex items-center gap-3 group">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-600/80 text-sm font-semibold text-white">
+                  {{ cliente.nome|slice:":1"|upper }}
+                </div>
+                <div>
+                  <p class="font-medium text-slate-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400">{{ cliente.nome }}</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">{{ cliente.cpf_cnpj_mascarado }}</p>
+                </div>
+              </a>
+            </td>
+            <td class="py-4 px-6 text-slate-600 dark:text-slate-300">{{ cliente.get_tipo_display }}</td>
+            <td class="py-4 px-6">
+              <p class="text-slate-600 dark:text-slate-300">{{ cliente.email }}</p>
+              {% if cliente.telefone %}<p class="text-xs text-slate-500 dark:text-slate-400">{{ cliente.telefone }}</p>{% endif %}
+            </td>
+            <td class="py-4 px-6">
+              {% if item.ultimo_desc %}
+              <p class="text-slate-600 dark:text-slate-300">{{ item.ultimo_desc }}</p>
+              {% if item.ultimo_data %}<p class="text-xs text-slate-500 dark:text-slate-400">Atualizado em {{ item.ultimo_data|date:"d/m" }}</p>{% endif %}
+              {% if item.qtd_documentos %}<p class="text-xs text-slate-500 dark:text-slate-400">{{ item.qtd_documentos }} documento(s) anexado(s)</p>{% endif %}
+              {% else %}
+              <span class="text-slate-400 dark:text-slate-500">—</span>
+              {% endif %}
+            </td>
+            <td class="py-4 px-6">
+              {% if cliente.vip %}
+              <span class="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300">VIP</span>
+              {% elif cliente.status %}
+              <span class="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">Ativo</span>
+              {% else %}
+              <span class="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300">Inativo</span>
+              {% endif %}
+            </td>
+            <td class="py-4 px-4">
+              <a href="{% url 'cliente_editar' cliente.id %}" class="inline-flex p-2 text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 rounded-lg transition-colors" title="Editar">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+              </a>
+            </td>
+          </tr>
+          {% endwith %}
+          {% empty %}
+          <tr>
+            <td colspan="6" class="py-12 text-center text-slate-500 dark:text-slate-400">Nenhum cliente encontrado.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page.has_other_pages %}
+    <div class="flex flex-shrink-0 items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-700">
+      <p class="text-sm text-slate-500 dark:text-slate-400">Mostrando {{ page.start_index }}-{{ page.end_index }} de {{ paginator.count }} clientes</p>
+      <div class="flex items-center gap-1">
+        {% if page.has_previous %}
+        <a href="?page={{ page.previous_page_number }}{% if busca %}&q={{ busca }}{% endif %}{% if status_filtro %}&status={{ status_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}" class="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+          Anterior
+        </a>
+        {% endif %}
+        {% for p in page.paginator.page_range %}
+          {% if p == page.number %}
+        <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-violet-600 text-white text-sm font-medium">{{ p }}</span>
+          {% elif p > page.number|add:"-3" and p < page.number|add:"3" %}
+        <a href="?page={{ p }}{% if busca %}&q={{ busca }}{% endif %}{% if status_filtro %}&status={{ status_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}" class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">{{ p }}</a>
+          {% endif %}
+        {% endfor %}
+        {% if page.has_next %}
+        <a href="?page={{ page.next_page_number }}{% if busca %}&q={{ busca }}{% endif %}{% if status_filtro %}&status={{ status_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}" class="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+          Próximo
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modal Novo Cliente -->
+<div id="modal-novo-cliente" class="fixed inset-0 z-[9999] flex items-center justify-center p-4" style="display: none">
+  <div onclick="fecharModal()" class="absolute inset-0 bg-slate-900/50 dark:bg-slate-950/70 backdrop-blur-sm"></div>
+  <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto z-10 ring-1 ring-slate-200 dark:ring-slate-700">
+    <div class="px-6 pt-6 pb-6">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Novo cliente</h3>
+        <button onclick="fecharModal()" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <form action="{% url 'clientes' %}" method="POST" class="space-y-4">
+        {% csrf_token %}
+        <div>
+          <label for="nome" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nome</label>
+          <input type="text" name="nome" id="nome" required class="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-violet-500 outline-none" />
+        </div>
+        <div>
+          <label for="email" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">E-mail</label>
+          <input type="email" name="email" id="email" required class="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-violet-500 outline-none" />
+        </div>
+        <div>
+          <label for="cpf_cnpj" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">CPF/CNPJ</label>
+          <input type="text" name="cpf_cnpj" id="cpf_cnpj" placeholder="Apenas números" class="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-violet-500 outline-none" />
+        </div>
+        <div>
+          <label for="telefone" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Telefone</label>
+          <input type="text" name="telefone" id="telefone" placeholder="(11) 99999-0000" class="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-violet-500 outline-none" />
+        </div>
+        <div>
+          <label for="tipo" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo</label>
+          <select name="tipo" id="tipo" required class="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-violet-500 outline-none">
+            <option value="PF">Pessoa física</option>
+            <option value="PJ">Pessoa jurídica</option>
+          </select>
+        </div>
+        <div class="flex gap-4">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" name="status" id="status" checked class="h-4 w-4 text-violet-600 rounded border-slate-300 focus:ring-violet-500" />
+            <span class="text-sm text-slate-700 dark:text-slate-300">Cliente ativo</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" name="vip" id="vip" class="h-4 w-4 text-violet-600 rounded border-slate-300 focus:ring-violet-500" />
+            <span class="text-sm text-slate-700 dark:text-slate-300">VIP</span>
+          </label>
+        </div>
+        <div class="flex gap-3 pt-4">
+          <button type="button" onclick="fecharModal()" class="flex-1 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Cancelar</button>
+          <button type="submit" class="flex-1 bg-violet-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-violet-500 transition-colors">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function abrirModal() { document.getElementById('modal-novo-cliente').style.display = 'flex'; }
+function fecharModal() { document.getElementById('modal-novo-cliente').style.display = 'none'; }
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') fecharModal(); });
+</script>
+{% endblock 'body' %}
