@@ -89,13 +89,19 @@ class JuriAI:
     - Mantenha um tom profissional e objetivo em todas as respostas.
     """
 
-    knowledge = Knowledge(
-        vector_db=LanceDb(
-            table_name=VECTOR_DB_TABLE,
-            uri=VECTOR_DB_URI,
-            embedder=OpenAIEmbedder()
-        ),
-    )
+    _knowledge = None
+
+    @classmethod
+    def get_knowledge(cls):
+        if cls._knowledge is None:
+            cls._knowledge = Knowledge(
+                vector_db=LanceDb(
+                    table_name=cls.VECTOR_DB_TABLE,
+                    uri=cls.VECTOR_DB_URI,
+                    embedder=OpenAIEmbedder()
+                ),
+            )
+        return cls._knowledge
 
     INSTRUCTIONS_AREA = """
     SUAS CAPACIDADES:
@@ -127,7 +133,7 @@ class JuriAI:
             instructions=cls.INSTRUCTIONS,
             db=db,
             update_memory_on_run=True,
-            knowledge=cls.knowledge,
+            knowledge=cls.get_knowledge(),
             knowledge_filters=knowledge_filters,
             search_knowledge=True,
         )
@@ -150,7 +156,7 @@ class JuriAI:
             instructions=cls.INSTRUCTIONS_AREA,
             db=db,
             update_memory_on_run=True,
-            knowledge=cls.knowledge,
+            knowledge=cls.get_knowledge(),
             knowledge_filters=knowledge_filters,
             search_knowledge=True,
         )

@@ -16,8 +16,18 @@ class JurisprudenciaOutput(BaseModel):
     red_flags: list[str] = Field(..., description='Red flags críticas identificadas')
 
 class BaseAgent:
-    llm = ChatOpenAI(model_name='gpt-4.1-mini')
+    _llm = None
     language: str = 'pt-br'
+
+    @classmethod
+    def get_llm(cls):
+        if cls._llm is None:
+            cls._llm = ChatOpenAI(model_name='gpt-4.1-mini')
+        return cls._llm
+
+    @property
+    def llm(self):
+        return self.get_llm()
 
     @abstractmethod
     def _prompt(self): ...

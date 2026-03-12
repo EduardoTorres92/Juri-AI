@@ -107,7 +107,7 @@ def rag_documentos(instance_id):
         logger.warning("Documento %s sem conteúdo para indexar no RAG.", instance_id)
         return
     try:
-        JuriAI.knowledge.insert(
+        JuriAI.get_knowledge().insert(
             name=documentos.arquivo.name,
             text_content=documentos.content,
             metadata={
@@ -178,7 +178,7 @@ def rag_documento_area(instance_id):
         logger.warning("Documento área %s sem conteúdo para indexar no RAG.", instance_id)
         return
     try:
-        JuriAI.knowledge.insert(
+        JuriAI.get_knowledge().insert(
             name=doc.arquivo.name,
             text_content=doc.content,
             metadata={
