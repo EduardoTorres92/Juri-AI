@@ -1,4 +1,5 @@
 import json
+import os
 import urllib3
 
 import requests
@@ -45,7 +46,7 @@ def search_datajud_api(tribunal: TribunalLiteral, process_number: str) -> str:
         }
     }
     headers = {
-        "Authorization": "APIKey cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==",
+        "Authorization": f"APIKey {os.getenv('DATAJUD_API_KEY', 'cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==')}",
         "Content-Type": "application/json"
     }
 
@@ -63,7 +64,7 @@ def search_datajud_api(tribunal: TribunalLiteral, process_number: str) -> str:
 class JuriAI:
 
     DATAJUD_BASE_URL = "https://api-publica.datajud.cnj.jus.br"
-    DATAJUD_API_KEY = "cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw=="
+    DATAJUD_API_KEY = os.getenv('DATAJUD_API_KEY', 'cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==')
     VECTOR_DB_TABLE = "documentos"
     VECTOR_DB_URI = "lancedb"
     MEMORY_DB_FILE = "db.sqlite3"
