@@ -2,7 +2,8 @@
 set -o errexit
 
 pip install uv
-uv sync
+uv export --no-hashes -o requirements.txt
+pip install -r requirements.txt
 
-uv run python manage.py collectstatic --noinput
-uv run python manage.py migrate
+python manage.py collectstatic --noinput
+python manage.py migrate
